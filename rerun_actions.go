@@ -130,16 +130,18 @@ func (h *handler) handle(ctx context.Context, repoOwner, repoName string, commen
 			// Filter on pull request runs.
 			Event: "pull_request",
 		}
+		h.Debugf("Filtering workflow runs for actor %s and event %s", opts.Actor, opts.Event)
 		// TODO: paginate
 		workflowRuns, _, err := h.Actions.ListWorkflowRunsByID(ctx, repoOwner, repoName, workflow.GetID(), opts)
 		if err != nil {
 			h.Errorf("Failed to list workflow runs: %v", err)
 			return nil
 		}
+		h.Debugf("Found %d workflow runs for workflow %s", len(workflowRuns.WorkflowRuns), workflow.GetName())
 		for _, run := range workflowRuns.WorkflowRuns {
 			// Stop searching runs once an older run is found.
 			if run.GetCreatedAt().Before(pr.GetCreatedAt()) {
-				h.Debugf("Older workflow run than PR %d found", prNum)
+				h.Debugf("Skipping run %d because it was created before the PR", run.GetID())
 				break
 			}
 			// A matching run's SHA will match the PR's head SHA.
@@ -148,6 +150,7 @@ func (h *handler) handle(ctx context.Context, repoOwner, repoName string, commen
 				runsToRerun = append(runsToRerun, run)
 				break
 			}
+			h.Debugf("Skipping run %d because its SHA (%s) does not match the PR's head SHA (%s)", run.GetID(), run.GetHeadSHA(), pr.GetHead().GetSHA())
 		}
 	}
 
