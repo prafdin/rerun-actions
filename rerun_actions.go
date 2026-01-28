@@ -127,10 +127,8 @@ func (h *handler) handle(ctx context.Context, repoOwner, repoName string, commen
 		opts := &github.ListWorkflowRunsOptions{
 			// Filter by whoever created the PR.
 			Actor: issue.GetUser().GetLogin(),
-			// Filter on pull request runs.
-			Event: "pull_request",
 		}
-		h.Debugf("Filtering workflow runs for actor %s and event %s", opts.Actor, opts.Event)
+		h.Debugf("Filtering workflow runs for actor %s", opts.Actor)
 		// TODO: paginate
 		workflowRuns, _, err := h.Actions.ListWorkflowRunsByID(ctx, repoOwner, repoName, workflow.GetID(), opts)
 		if err != nil {
