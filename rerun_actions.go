@@ -40,7 +40,7 @@ func (h *handler) initFromActionsEnv(ctx context.Context) {
 }
 
 // handle reruns a set of actions for the PR associated with a given commentID, if possible.
-func (h *handler) handle(ctx context.Context, repoOwner, repoName string, commentID int64) error {
+func (h *handler) handle(ctx context.Context, repoOwner, repoName string, commentID int64, allowedUsers []string) error {
 	comment, _, err := h.Issues.GetComment(ctx, repoOwner, repoName, commentID)
 	if err != nil {
 		h.Errorf("Failed to get comment: %v", err)
@@ -70,7 +70,7 @@ func (h *handler) handle(ctx context.Context, repoOwner, repoName string, commen
 	}
 
 	// Issue must have "ok-to-test" label, or the issue commenter must have org/repo permissions to run tests.
-	if !hasOkToTestLabel(issue) && !isCommenterPrivileged(comment.GetAuthorAssociation()) {
+	if !isCommenterAllowed(*comment.User.Login, allowedUsers) && !hasOkToTestLabel(issue) && !isCommenterPrivileged(comment.GetAuthorAssociation()) {
 		h.Debugf("Issue lacks the \"ok-to-test\" label (labels: %v) and commenter is unprivileged (association: %s)",
 			issue.Labels, comment.GetAuthorAssociation())
 		return nil
@@ -213,6 +213,15 @@ var privilegedAssociations = map[string]struct{}{
 	"contributor":  {},
 	"member":       {},
 	"owner":        {},
+}
+
+func isCommenterAllowed(commenter string, allowedUsers []string) bool {
+	for _, user := range allowedUsers {
+		if commenter == user {
+			return true
+		}
+	}
+	return false
 }
 
 // isCommenterPrivileged returns true if authorAssoc is a privileged keyword:

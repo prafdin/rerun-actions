@@ -7,9 +7,12 @@ inputs:
   comment_id:
     description: ID of the comment creation event. Set to 'github.event.comment.id'.
     required: true
+  allowed_users:
+    description: A comma-separated list of GitHub usernames that are allowed to rerun actions.
+    required: false
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: "docker"
+  image: "Dockerfile"
 branding:
-  icon: 'zap'
-  color: 'blue'
+  icon: "zap"
+  color: "blue"

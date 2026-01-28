@@ -36,7 +36,13 @@ func main() {
 	repoOwner = strings.Trim(repoOwner, "/")
 	h.Debugf("Repo owner=%s name=%s commentID=%d", repoOwner, repoName, commentID)
 
-	if err := h.handle(ctx, repoOwner, repoName, commentID); err != nil {
+	allowedUsersStr := h.GetInput("allowed_users")
+	var allowedUsers []string
+	if allowedUsersStr != "" {
+		allowedUsers = strings.Split(allowedUsersStr, ",")
+	}
+
+	if err := h.handle(ctx, repoOwner, repoName, commentID, allowedUsers); err != nil {
 		h.Fatalf("%v", err)
 	}
 }
